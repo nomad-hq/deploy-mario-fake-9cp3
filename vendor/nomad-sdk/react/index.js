@@ -207,6 +207,7 @@ var C = {
   bg: "#000000",
   surface: "#0a0a0a",
   surface2: "#111111",
+  surface3: "#1a1a1a",
   lineSubtle: "rgba(255,255,255,0.06)",
   line: "rgba(255,255,255,0.10)",
   lineStrong: "rgba(255,255,255,0.16)",
@@ -214,7 +215,8 @@ var C = {
   muted: "#a1a1a1",
   faint: "#666666",
   accent: "#ffffff",
-  danger: "#ee4444"
+  danger: "#ee4444",
+  ok: "#22c55e"
 };
 function resolveAppearance(a) {
   return {
@@ -513,6 +515,16 @@ function CenterMessage({
 
 // src/react/two-factor-section.tsx
 import { jsx as jsx3, jsxs as jsxs2 } from "react/jsx-runtime";
+var ghostBtn = (radius) => ({
+  alignSelf: "flex-start",
+  border: `1px solid ${C.line}`,
+  borderRadius: radius,
+  padding: "8px 16px",
+  fontSize: 14,
+  cursor: "pointer",
+  background: "transparent",
+  color: C.fg
+});
 var stack = { display: "flex", flexDirection: "column", gap: "12px" };
 function TwoFactorSection({
   client,
@@ -576,13 +588,13 @@ function TwoFactorSection({
   }
   if (enabled && stage !== "backup") {
     return /* @__PURE__ */ jsxs2("div", { style: stack, children: [
-      /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: "#16a34a", fontWeight: 600 }, children: "\u2713 Two-factor authentication is on." }),
+      /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: C.ok, fontWeight: 600 }, children: "\u2713 Two-factor authentication is on." }),
       /* @__PURE__ */ jsx3(
         "button",
         {
           onClick: disable,
           disabled: busy,
-          style: { alignSelf: "flex-start", border: "1px solid #d4d4d8", borderRadius: radius, padding: "8px 16px", fontSize: 14, cursor: "pointer", background: "#fff" },
+          style: ghostBtn(radius),
           children: busy ? "\u2026" : "Disable 2FA"
         }
       )
@@ -590,14 +602,16 @@ function TwoFactorSection({
   }
   if (stage === "backup") {
     return /* @__PURE__ */ jsxs2("div", { style: stack, children: [
-      /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: "#3f3f46" }, children: "Save these backup codes somewhere safe \u2014 each works once if you lose your device." }),
+      /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: C.muted }, children: "Save these backup codes somewhere safe \u2014 each works once if you lose your device." }),
       /* @__PURE__ */ jsx3(
         "pre",
         {
           style: {
             margin: 0,
             padding: "12px",
-            background: "#f4f4f5",
+            background: C.surface2,
+            border: `1px solid ${C.lineSubtle}`,
+            color: C.fg,
             borderRadius: radius,
             fontSize: 13,
             fontFamily: "ui-monospace, monospace",
@@ -612,10 +626,10 @@ function TwoFactorSection({
   }
   if (stage === "setup") {
     return /* @__PURE__ */ jsxs2("div", { style: stack, children: [
-      /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: "#3f3f46" }, children: "Scan this with Google Authenticator / Authy, then enter the 6-digit code." }),
+      /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: C.muted }, children: "Scan this with Google Authenticator / Authy, then enter the 6-digit code." }),
       qr && // eslint-disable-next-line @next/next/no-img-element
       /* @__PURE__ */ jsx3("img", { src: qr, alt: "2FA QR code", width: 180, height: 180, style: { alignSelf: "center" } }),
-      /* @__PURE__ */ jsxs2("p", { style: { margin: 0, fontSize: 12, color: "#71717a", wordBreak: "break-all" }, children: [
+      /* @__PURE__ */ jsxs2("p", { style: { margin: 0, fontSize: 12, color: C.muted, wordBreak: "break-all" }, children: [
         "Or enter this key manually: ",
         /* @__PURE__ */ jsx3("code", { children: secret })
       ] }),
@@ -625,13 +639,13 @@ function TwoFactorSection({
       ] }),
       /* @__PURE__ */ jsxs2("div", { style: { display: "flex", gap: 8 }, children: [
         /* @__PURE__ */ jsx3(Button, { variant: "primary", primary, radius, disabled: busy, onClick: confirm, children: busy ? "Enabling\u2026" : "Enable 2FA" }),
-        /* @__PURE__ */ jsx3("button", { onClick: () => setStage("idle"), style: { border: "1px solid #d4d4d8", borderRadius: radius, padding: "8px 16px", fontSize: 14, cursor: "pointer", background: "#fff" }, children: "Cancel" })
+        /* @__PURE__ */ jsx3("button", { onClick: () => setStage("idle"), style: { ...ghostBtn(radius), alignSelf: "auto" }, children: "Cancel" })
       ] }),
       /* @__PURE__ */ jsx3(ErrorText, { children: error })
     ] });
   }
   return /* @__PURE__ */ jsxs2("div", { style: stack, children: [
-    /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: "#3f3f46" }, children: "Add an extra layer of security with an authenticator app." }),
+    /* @__PURE__ */ jsx3("p", { style: { margin: 0, fontSize: 14, color: C.muted }, children: "Add an extra layer of security with an authenticator app." }),
     /* @__PURE__ */ jsx3(Button, { variant: "primary", primary, radius, disabled: busy, onClick: startSetup, children: busy ? "\u2026" : "Set up 2FA" }),
     /* @__PURE__ */ jsx3(ErrorText, { children: error })
   ] });
@@ -646,14 +660,14 @@ function Section({ title, children }) {
     "section",
     {
       style: {
-        background: "#fff",
-        border: "1px solid #e4e4e7",
+        background: C.surface,
+        border: `1px solid ${C.line}`,
         borderRadius: "12px",
         padding: "24px",
         fontFamily: font2
       },
       children: [
-        /* @__PURE__ */ jsx4("h2", { style: { margin: "0 0 16px", fontSize: "16px", fontWeight: 700, color: "#18181b" }, children: title }),
+        /* @__PURE__ */ jsx4("h2", { style: { margin: "0 0 16px", fontSize: "16px", fontWeight: 700, color: C.fg }, children: title }),
         children
       ]
     }
@@ -797,39 +811,39 @@ function NomadUserProfile({
         u.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           /* @__PURE__ */ jsx4("img", { src: u.avatarUrl, alt: "", width: 80, height: 80, style: { borderRadius: "50%", objectFit: "cover" } })
-        ) : /* @__PURE__ */ jsx4("div", { style: { width: 80, height: 80, borderRadius: "50%", background: "#e4e4e7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: "#52525b" }, children: (u.name ?? u.email).slice(0, 1).toUpperCase() }),
+        ) : /* @__PURE__ */ jsx4("div", { style: { width: 80, height: 80, borderRadius: "50%", background: C.surface3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: C.muted }, children: (u.name ?? u.email).slice(0, 1).toUpperCase() }),
         /* @__PURE__ */ jsx4("div", { children: avatarEdit ? /* @__PURE__ */ jsxs3("div", { style: { display: "flex", gap: "8px" }, children: [
           /* @__PURE__ */ jsx4(Input, { type: "url", value: avatarUrl, onChange: setAvatarUrl, placeholder: "https://\u2026/avatar.png", radius }),
           /* @__PURE__ */ jsx4(Button, { variant: "primary", primary, radius, disabled: busy === "avatar", onClick: saveAvatar, children: "Save" })
         ] }) : /* @__PURE__ */ jsx4("button", { onClick: () => {
           setAvatarUrl(u.avatarUrl ?? "");
           setAvatarEdit(true);
-        }, style: { background: "none", border: "none", color: "#3f3f46", textDecoration: "underline", cursor: "pointer", fontSize: 13, padding: 0 }, children: "Edit avatar" }) })
+        }, style: { background: "none", border: "none", color: C.muted, textDecoration: "underline", cursor: "pointer", fontSize: 13, padding: 0 }, children: "Edit avatar" }) })
       ] }),
-      /* @__PURE__ */ jsx4("label", { style: { fontSize: 13, fontWeight: 600, color: "#3f3f46" }, children: "Name" }),
+      /* @__PURE__ */ jsx4("label", { style: { fontSize: 13, fontWeight: 600, color: C.muted }, children: "Name" }),
       /* @__PURE__ */ jsxs3("div", { style: { display: "flex", gap: "8px", marginTop: 4 }, children: [
         /* @__PURE__ */ jsx4(Input, { type: "text", value: nameValue, onChange: (v) => setName(v), placeholder: "Your name", radius }),
         /* @__PURE__ */ jsx4(Button, { variant: "outline", primary, radius, disabled: busy === "name" || (name ?? u.name ?? "") === (u.name ?? ""), onClick: saveName, children: "Save" })
       ] }),
-      /* @__PURE__ */ jsxs3("p", { style: { margin: "16px 0 0", fontSize: 14, color: "#3f3f46" }, children: [
+      /* @__PURE__ */ jsxs3("p", { style: { margin: "16px 0 0", fontSize: 14, color: C.muted }, children: [
         u.email,
         " ",
-        /* @__PURE__ */ jsx4("span", { style: { marginLeft: 8, fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: u.emailVerified ? "#dcfce7" : "#fef9c3", color: u.emailVerified ? "#16a34a" : "#a16207" }, children: u.emailVerified ? "Verified" : "Unverified" })
+        /* @__PURE__ */ jsx4("span", { style: { marginLeft: 8, fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: u.emailVerified ? "rgba(34,197,94,0.14)" : "rgba(234,179,8,0.14)", color: u.emailVerified ? C.ok : "#eab308" }, children: u.emailVerified ? "Verified" : "Unverified" })
       ] })
     ] }),
     providers.length > 0 && /* @__PURE__ */ jsx4(Section, { title: "Connected accounts", children: /* @__PURE__ */ jsx4("div", { style: stack2, children: providers.map((p) => {
       const linked = profile.linkedAccounts.find((l) => l.provider === p);
-      return /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", border: "1px solid #f4f4f5", borderRadius: radius, padding: "12px" }, children: [
+      return /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", border: `1px solid ${C.lineSubtle}`, borderRadius: radius, padding: "12px" }, children: [
         /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", gap: "10px", fontSize: 14 }, children: [
           p === "github" ? /* @__PURE__ */ jsx4(GitHubIcon, {}) : /* @__PURE__ */ jsx4(GoogleIcon, {}),
           /* @__PURE__ */ jsxs3("div", { children: [
-            /* @__PURE__ */ jsx4("div", { style: { fontWeight: 600, color: "#18181b" }, children: PROVIDER_LABEL[p] }),
-            /* @__PURE__ */ jsx4("div", { style: { color: "#71717a", fontSize: 13 }, children: linked ? `${linked.providerEmail ?? linked.providerName ?? "connected"} \xB7 ${timeAgo(linked.createdAt)}` : "Not connected" })
+            /* @__PURE__ */ jsx4("div", { style: { fontWeight: 600, color: C.fg }, children: PROVIDER_LABEL[p] }),
+            /* @__PURE__ */ jsx4("div", { style: { color: C.muted, fontSize: 13 }, children: linked ? `${linked.providerEmail ?? linked.providerName ?? "connected"} \xB7 ${timeAgo(linked.createdAt)}` : "Not connected" })
           ] })
         ] }),
         linked ? /* @__PURE__ */ jsx4("button", { onClick: () => {
           if (window.confirm(`Disconnect ${PROVIDER_LABEL[p]}?`)) void unlinkProvider(p);
-        }, style: { border: "1px solid #d4d4d8", borderRadius: radius, padding: "6px 12px", fontSize: 13, cursor: "pointer", background: "#fff" }, children: "Disconnect" }) : /* @__PURE__ */ jsx4("button", { onClick: () => p === "github" ? client?.auth.signInWithGitHub() : client?.auth.signInWithGoogle(), style: { border: "1px solid #d4d4d8", borderRadius: radius, padding: "6px 12px", fontSize: 13, cursor: "pointer", background: "#fff" }, children: "Connect" })
+        }, style: { border: `1px solid ${C.line}`, borderRadius: radius, padding: "6px 12px", fontSize: 13, cursor: "pointer", background: "transparent" }, children: "Disconnect" }) : /* @__PURE__ */ jsx4("button", { onClick: () => p === "github" ? client?.auth.signInWithGitHub() : client?.auth.signInWithGoogle(), style: { border: `1px solid ${C.line}`, borderRadius: radius, padding: "6px 12px", fontSize: 13, cursor: "pointer", background: "transparent" }, children: "Connect" })
       ] }, p);
     }) }) }),
     m.emailPassword && /* @__PURE__ */ jsx4(Section, { title: u.hasPassword ? "Change password" : "Set a password", children: /* @__PURE__ */ jsxs3("div", { style: stack2, children: [
@@ -837,8 +851,8 @@ function NomadUserProfile({
       /* @__PURE__ */ jsx4(Input, { type: "password", value: pwd.next, onChange: (v) => setPwd({ ...pwd, next: v }), placeholder: "New password (min 8)", autoComplete: "new-password", radius }),
       /* @__PURE__ */ jsx4(Input, { type: "password", value: pwd.confirm, onChange: (v) => setPwd({ ...pwd, confirm: v }), placeholder: "Confirm new password", autoComplete: "new-password", radius }),
       /* @__PURE__ */ jsx4(Button, { variant: "primary", primary, radius, disabled: busy === "pwd", onClick: submitPassword, children: busy === "pwd" ? "Saving\u2026" : u.hasPassword ? "Update password" : "Set password" }),
-      /* @__PURE__ */ jsx4("p", { style: { margin: 0, fontSize: 12, color: "#a1a1aa" }, children: "Updating your password signs out all other devices." }),
-      pwdMsg && /* @__PURE__ */ jsx4("p", { style: { margin: 0, fontSize: 13, color: "#3f3f46" }, children: pwdMsg })
+      /* @__PURE__ */ jsx4("p", { style: { margin: 0, fontSize: 12, color: C.muted }, children: "Updating your password signs out all other devices." }),
+      pwdMsg && /* @__PURE__ */ jsx4("p", { style: { margin: 0, fontSize: 13, color: C.muted }, children: pwdMsg })
     ] }) }),
     m.twoFactor && /* @__PURE__ */ jsx4(Section, { title: "Two-factor authentication", children: /* @__PURE__ */ jsx4(
       TwoFactorSection,
@@ -851,13 +865,13 @@ function NomadUserProfile({
       }
     ) }),
     /* @__PURE__ */ jsx4(Section, { title: `Active sessions (${profile.sessions.length})`, children: /* @__PURE__ */ jsxs3("div", { style: stack2, children: [
-      profile.sessions.map((s) => /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", border: "1px solid #f4f4f5", borderRadius: radius, padding: "12px", fontSize: 13 }, children: [
+      profile.sessions.map((s) => /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", border: `1px solid ${C.lineSubtle}`, borderRadius: radius, padding: "12px", fontSize: 13 }, children: [
         /* @__PURE__ */ jsxs3("div", { style: { display: "flex", gap: "10px" }, children: [
           /* @__PURE__ */ jsx4("span", { style: { fontSize: 18 }, children: deviceIcon(s.deviceType) }),
           /* @__PURE__ */ jsxs3("div", { children: [
-            /* @__PURE__ */ jsx4("div", { style: { fontWeight: 600, color: "#18181b" }, children: [s.os, s.browser].filter(Boolean).join(" ") || "Unknown device" }),
-            /* @__PURE__ */ jsx4("div", { style: { color: "#71717a" }, children: [s.city, s.country].filter(Boolean).join(", ") || s.ipAddress || "" }),
-            /* @__PURE__ */ jsxs3("div", { style: { color: "#71717a" }, children: [
+            /* @__PURE__ */ jsx4("div", { style: { fontWeight: 600, color: C.fg }, children: [s.os, s.browser].filter(Boolean).join(" ") || "Unknown device" }),
+            /* @__PURE__ */ jsx4("div", { style: { color: C.muted }, children: [s.city, s.country].filter(Boolean).join(", ") || s.ipAddress || "" }),
+            /* @__PURE__ */ jsxs3("div", { style: { color: C.muted }, children: [
               "Signed in via ",
               METHOD_LABEL[s.signInMethod] ?? s.signInMethod,
               " \xB7 last active ",
@@ -865,18 +879,18 @@ function NomadUserProfile({
             ] })
           ] })
         ] }),
-        s.isCurrent ? /* @__PURE__ */ jsx4("span", { style: { fontSize: 11, fontWeight: 700, color: "#16a34a" }, children: "Current \u2713" }) : /* @__PURE__ */ jsx4("button", { onClick: () => void revoke(s.id), style: { border: `1px solid ${danger}`, color: danger, borderRadius: radius, padding: "6px 12px", fontSize: 13, cursor: "pointer", background: "#fff" }, children: "Revoke" })
+        s.isCurrent ? /* @__PURE__ */ jsx4("span", { style: { fontSize: 11, fontWeight: 700, color: C.ok }, children: "Current \u2713" }) : /* @__PURE__ */ jsx4("button", { onClick: () => void revoke(s.id), style: { border: `1px solid ${danger}`, color: danger, borderRadius: radius, padding: "6px 12px", fontSize: 13, cursor: "pointer", background: "transparent" }, children: "Revoke" })
       ] }, s.id)),
       profile.sessions.length > 1 && /* @__PURE__ */ jsx4(Button, { variant: "outline", primary, radius, disabled: busy === "others", onClick: signOutOthers, children: busy === "others" ? "Signing out\u2026" : "Sign out from all other devices" })
     ] }) }),
-    /* @__PURE__ */ jsxs3("section", { style: { background: "#fff", border: `1px solid ${danger}33`, borderRadius: "12px", padding: "24px", fontFamily: font2 }, children: [
+    /* @__PURE__ */ jsxs3("section", { style: { background: C.surface, border: `1px solid ${danger}33`, borderRadius: "12px", padding: "24px", fontFamily: font2 }, children: [
       /* @__PURE__ */ jsx4("h2", { style: { margin: "0 0 16px", fontSize: "16px", fontWeight: 700, color: danger }, children: "Danger zone" }),
       /* @__PURE__ */ jsxs3("div", { style: stack2, children: [
         /* @__PURE__ */ jsx4("button", { onClick: () => {
           if (window.confirm("Sign out from every device, including this one?")) void signOutEverywhere();
-        }, style: { alignSelf: "flex-start", border: "1px solid #d4d4d8", borderRadius: radius, padding: "8px 16px", fontSize: 14, cursor: "pointer", background: "#fff" }, children: "Sign out everywhere" }),
-        !confirmDelete ? /* @__PURE__ */ jsx4("button", { onClick: () => setConfirmDelete(true), style: { alignSelf: "flex-start", border: `1px solid ${danger}`, color: danger, borderRadius: radius, padding: "8px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer", background: "#fff" }, children: "Delete account" }) : /* @__PURE__ */ jsxs3("div", { style: { ...stack2, border: `1px solid ${danger}55`, borderRadius: radius, padding: "16px", background: `${danger}08` }, children: [
-          /* @__PURE__ */ jsxs3("p", { style: { margin: 0, fontSize: 13, color: "#3f3f46" }, children: [
+        }, style: { alignSelf: "flex-start", border: `1px solid ${C.line}`, borderRadius: radius, padding: "8px 16px", fontSize: 14, cursor: "pointer", background: "transparent" }, children: "Sign out everywhere" }),
+        !confirmDelete ? /* @__PURE__ */ jsx4("button", { onClick: () => setConfirmDelete(true), style: { alignSelf: "flex-start", border: `1px solid ${danger}`, color: danger, borderRadius: radius, padding: "8px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer", background: "transparent" }, children: "Delete account" }) : /* @__PURE__ */ jsxs3("div", { style: { ...stack2, border: `1px solid ${danger}55`, borderRadius: radius, padding: "16px", background: `${danger}08` }, children: [
+          /* @__PURE__ */ jsxs3("p", { style: { margin: 0, fontSize: 13, color: C.muted }, children: [
             "This cannot be undone. Type ",
             /* @__PURE__ */ jsx4("strong", { children: u.email }),
             " to confirm."
@@ -888,7 +902,7 @@ function NomadUserProfile({
             /* @__PURE__ */ jsx4("button", { onClick: () => {
               setConfirmDelete(false);
               setConfirmEmail("");
-            }, style: { border: "1px solid #d4d4d8", borderRadius: radius, padding: "8px 16px", fontSize: 14, cursor: "pointer", background: "#fff" }, children: "Cancel" })
+            }, style: { border: `1px solid ${C.line}`, borderRadius: radius, padding: "8px 16px", fontSize: 14, cursor: "pointer", background: "transparent" }, children: "Cancel" })
           ] })
         ] })
       ] })
@@ -964,22 +978,23 @@ function NomadUserButton({
             top: "calc(100% + 8px)",
             zIndex: 50,
             width: 240,
-            background: "#fff",
-            border: "1px solid #e4e4e7",
+            background: "rgba(10,10,10,0.97)",
+            border: `1px solid ${C.line}`,
+            backdropFilter: "blur(12px)",
             borderRadius: `calc(${radius} + 4px)`,
-            boxShadow: "0 12px 32px -8px rgba(0,0,0,0.22)",
+            boxShadow: "0 12px 32px -8px rgba(0,0,0,0.6)",
             overflow: "hidden"
           },
           children: [
-            /* @__PURE__ */ jsxs4("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: "1px solid #f4f4f5" }, children: [
+            /* @__PURE__ */ jsxs4("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: `1px solid ${C.lineSubtle}` }, children: [
               avatar,
               /* @__PURE__ */ jsxs4("div", { style: { minWidth: 0 }, children: [
-                user.name && /* @__PURE__ */ jsx5("div", { style: { fontSize: 14, fontWeight: 600, color: "#18181b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: user.name }),
-                /* @__PURE__ */ jsx5("div", { style: { fontSize: 12, color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: user.email })
+                user.name && /* @__PURE__ */ jsx5("div", { style: { fontSize: 14, fontWeight: 600, color: C.fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: user.name }),
+                /* @__PURE__ */ jsx5("div", { style: { fontSize: 12, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: user.email })
               ] })
             ] }),
-            /* @__PURE__ */ jsx5("a", { href: profileUrl, style: { display: "block", padding: "10px 16px", fontSize: 14, color: "#18181b", textDecoration: "none" }, children: "Manage account" }),
-            /* @__PURE__ */ jsx5("button", { onClick: doSignOut, style: { display: "block", width: "100%", textAlign: "left", padding: "10px 16px", fontSize: 14, color: "#18181b", background: "none", border: "none", borderTop: "1px solid #f4f4f5", cursor: "pointer" }, children: "Sign out" })
+            /* @__PURE__ */ jsx5("a", { href: profileUrl, style: { display: "block", padding: "10px 16px", fontSize: 14, color: C.fg, textDecoration: "none" }, children: "Manage account" }),
+            /* @__PURE__ */ jsx5("button", { onClick: doSignOut, style: { display: "block", width: "100%", textAlign: "left", padding: "10px 16px", fontSize: 14, color: C.fg, background: "none", border: "none", borderTop: `1px solid ${C.lineSubtle}`, cursor: "pointer" }, children: "Sign out" })
           ]
         }
       )
@@ -1502,19 +1517,21 @@ function NomadVerifyEmail({
     window.location.href = "/sign-in";
   }
   return /* @__PURE__ */ jsx9(Screen, { children: /* @__PURE__ */ jsxs8(Card, { radius, children: [
+    /* @__PURE__ */ jsx9(BrandMark, {}),
     /* @__PURE__ */ jsx9(Title, { children: "Verify your email" }),
-    /* @__PURE__ */ jsxs8("p", { style: { textAlign: "center", color: "#52525b", fontSize: "14px", lineHeight: 1.6, margin: "0 0 24px" }, children: [
+    /* @__PURE__ */ jsxs8(Subtitle, { children: [
       "We sent a verification link to ",
-      /* @__PURE__ */ jsx9("strong", { children: email }),
+      /* @__PURE__ */ jsx9("strong", { style: { color: C.fg }, children: email }),
       ". Click the link in the email to access your account."
     ] }),
     /* @__PURE__ */ jsx9(Button, { variant: "primary", primary, radius, disabled: resending, onClick: resend, children: resending ? "Sending\u2026" : "Resend verification email" }),
-    message && /* @__PURE__ */ jsx9("p", { style: { textAlign: "center", fontSize: "13px", color: "#71717a", marginTop: "12px" }, children: message }),
-    /* @__PURE__ */ jsxs8("p", { style: { textAlign: "center", fontSize: "13px", color: "#a1a1aa", marginTop: "24px" }, children: [
+    message && /* @__PURE__ */ jsx9("p", { style: { textAlign: "center", fontSize: "13px", color: C.muted, marginTop: "12px" }, children: message }),
+    /* @__PURE__ */ jsxs8("p", { style: { textAlign: "center", fontSize: "13px", color: C.muted, marginTop: "24px" }, children: [
       "Wrong email?",
       " ",
-      /* @__PURE__ */ jsx9("span", { onClick: signOut, style: { color: "#18181b", textDecoration: "underline", cursor: "pointer" }, children: "Sign out" })
-    ] })
+      /* @__PURE__ */ jsx9("span", { onClick: signOut, className: "nomad-textlink", style: { color: C.fg, cursor: "pointer" }, children: "Sign out" })
+    ] }),
+    /* @__PURE__ */ jsx9(SecuredByNomad, {})
   ] }) });
 }
 
