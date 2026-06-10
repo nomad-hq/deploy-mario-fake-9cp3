@@ -2,9 +2,11 @@
 import {
   createNomadClient,
   getProductionUrl,
+  hasNomadToken,
   isPreviewMode,
-  skipLoginAsTestUser
-} from "../chunk-FKSHT4K5.js";
+  skipLoginAsTestUser,
+  trackClientEvent
+} from "../chunk-3A7EMPDJ.js";
 
 // src/react/provider.tsx
 import {
@@ -1004,11 +1006,11 @@ function useNomadConfig(override) {
 }
 
 // src/react/sign-in.tsx
-import { useState as useState9 } from "react";
+import { useEffect as useEffect5, useState as useState9 } from "react";
 
 // src/react/magic-link-section.tsx
 import { useState as useState8 } from "react";
-import { jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
 var stack3 = { display: "flex", flexDirection: "column", gap: "12px" };
 function MagicLinkSection({
   client,
@@ -1064,9 +1066,64 @@ function MagicLinkSection({
     state === "error" && /* @__PURE__ */ jsx6(ErrorText, { children: error })
   ] });
 }
+function MagicLinkInlineLink({
+  client,
+  email,
+  redirectTo
+}) {
+  const [state, setState] = useState8("idle");
+  const [error, setError] = useState8("");
+  const target = redirectTo ?? (typeof window !== "undefined" ? window.location.origin + "/oauth-callback" : void 0);
+  async function send() {
+    if (!client) return;
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setError("Enter your email above first.");
+      setState("error");
+      return;
+    }
+    setState("sending");
+    setError("");
+    try {
+      await client.auth.signInWithMagicLink({ email, redirectTo: target });
+      setState("sent");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not send the link.");
+      setState("error");
+    }
+  }
+  if (state === "sent") {
+    return /* @__PURE__ */ jsxs5("p", { style: { margin: "12px 0 0", textAlign: "center", fontSize: "13px", color: "#16a34a" }, children: [
+      "\u2713 Magic link sent to ",
+      email
+    ] });
+  }
+  return /* @__PURE__ */ jsxs5(Fragment2, { children: [
+    /* @__PURE__ */ jsx6(
+      "button",
+      {
+        type: "button",
+        onClick: () => void send(),
+        disabled: state === "sending",
+        style: {
+          margin: "12px 0 0",
+          width: "100%",
+          background: "none",
+          border: "none",
+          padding: 0,
+          fontSize: "13px",
+          color: "#71717a",
+          textAlign: "center",
+          cursor: state === "sending" ? "default" : "pointer"
+        },
+        children: state === "sending" ? "Sending\u2026" : "Email me a magic sign-in link instead"
+      }
+    ),
+    state === "error" && /* @__PURE__ */ jsx6(ErrorText, { children: error })
+  ] });
+}
 
 // src/react/sign-in.tsx
-import { jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
 var stack4 = { display: "flex", flexDirection: "column", gap: "14px" };
 var fieldGap = { display: "flex", flexDirection: "column", gap: "12px" };
 function NomadSignIn({
@@ -1077,9 +1134,22 @@ function NomadSignIn({
   appearance
 }) {
   const override = { projectId, baseUrl };
-  const { client, error: clientError } = useNomadClient(override);
+  const {
+    client,
+    projectId: resolvedProjectId,
+    baseUrl: resolvedBaseUrl,
+    error: clientError
+  } = useNomadClient(override);
   const { methods, projectName, loading, error: configError } = useNomadConfig(override);
   const { primary, radius } = resolveAppearance(appearance);
+  useEffect5(() => {
+    if (resolvedProjectId)
+      trackClientEvent({
+        projectId: resolvedProjectId,
+        baseUrl: resolvedBaseUrl,
+        type: "signin_viewed"
+      });
+  }, [resolvedProjectId, resolvedBaseUrl]);
   const [email, setEmail] = useState9("");
   const [password, setPassword] = useState9("");
   const [busy, setBusy] = useState9(null);
@@ -1167,36 +1237,37 @@ function NomadSignIn({
     ] }),
     /* @__PURE__ */ jsx7(Subtitle, { children: "Welcome back! Please sign in to continue" }),
     showOAuth && /* @__PURE__ */ jsxs6("div", { style: fieldGap, children: [
-      methods.github && /* @__PURE__ */ jsxs6(Button, { variant: "dark", radius, primary, disabled: busy !== null, onClick: () => {
-        setBusy("github");
-        client?.auth.signInWithGitHub();
-      }, children: [
-        /* @__PURE__ */ jsx7(GitHubIcon, {}),
-        " Continue with GitHub"
-      ] }),
       methods.google && /* @__PURE__ */ jsxs6(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
         setBusy("google");
         client?.auth.signInWithGoogle();
       }, children: [
         /* @__PURE__ */ jsx7(GoogleIcon, {}),
         " Continue with Google"
+      ] }),
+      methods.github && /* @__PURE__ */ jsxs6(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
+        setBusy("github");
+        client?.auth.signInWithGitHub();
+      }, children: [
+        /* @__PURE__ */ jsx7(GitHubIcon, {}),
+        " Continue with GitHub"
       ] })
     ] }),
-    showOAuth && (methods.magicLinks || methods.emailPassword) && /* @__PURE__ */ jsx7(Separator, {}),
-    methods.magicLinks && /* @__PURE__ */ jsx7(MagicLinkSection, { client, primary, radius }),
-    methods.magicLinks && methods.emailPassword && /* @__PURE__ */ jsx7(Separator, {}),
-    methods.emailPassword && /* @__PURE__ */ jsxs6("form", { onSubmit, style: stack4, children: [
-      /* @__PURE__ */ jsxs6("div", { children: [
-        /* @__PURE__ */ jsx7(Label, { children: "Email address" }),
-        /* @__PURE__ */ jsx7(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
+    showOAuth && (methods.emailPassword || methods.magicLinks) && /* @__PURE__ */ jsx7(Separator, {}),
+    methods.emailPassword ? /* @__PURE__ */ jsxs6(Fragment3, { children: [
+      /* @__PURE__ */ jsxs6("form", { onSubmit, style: stack4, children: [
+        /* @__PURE__ */ jsxs6("div", { children: [
+          /* @__PURE__ */ jsx7(Label, { children: "Email address" }),
+          /* @__PURE__ */ jsx7(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ jsxs6("div", { children: [
+          /* @__PURE__ */ jsx7(Label, { children: "Password" }),
+          /* @__PURE__ */ jsx7(Input, { type: "password", value: password, onChange: setPassword, placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", autoComplete: "current-password", radius, disabled: busy !== null }),
+          /* @__PURE__ */ jsx7("div", { style: { marginTop: 6 }, children: /* @__PURE__ */ jsx7("a", { href: "/reset-password", style: { fontSize: "12px", color: "#71717a", textDecoration: "underline" }, children: "Forgot password?" }) })
+        ] }),
+        /* @__PURE__ */ jsx7(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Signing in\u2026" : "Continue" })
       ] }),
-      /* @__PURE__ */ jsxs6("div", { children: [
-        /* @__PURE__ */ jsx7(Label, { children: "Password" }),
-        /* @__PURE__ */ jsx7(Input, { type: "password", value: password, onChange: setPassword, placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", autoComplete: "current-password", radius, disabled: busy !== null }),
-        /* @__PURE__ */ jsx7("div", { style: { marginTop: 6 }, children: /* @__PURE__ */ jsx7("a", { href: "/reset-password", style: { fontSize: "12px", color: "#71717a", textDecoration: "underline" }, children: "Forgot password?" }) })
-      ] }),
-      /* @__PURE__ */ jsx7(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Signing in\u2026" : "Continue" })
-    ] }),
+      methods.magicLinks && /* @__PURE__ */ jsx7(MagicLinkInlineLink, { client, email })
+    ] }) : methods.magicLinks && /* @__PURE__ */ jsx7(MagicLinkSection, { client, primary, radius }),
     /* @__PURE__ */ jsx7(ErrorText, { children: formError }),
     /* @__PURE__ */ jsxs6(Footer, { children: [
       "Don't have an account? ",
@@ -1207,8 +1278,8 @@ function NomadSignIn({
 }
 
 // src/react/sign-up.tsx
-import { useState as useState10 } from "react";
-import { jsx as jsx8, jsxs as jsxs7 } from "react/jsx-runtime";
+import { useEffect as useEffect6, useState as useState10 } from "react";
+import { Fragment as Fragment4, jsx as jsx8, jsxs as jsxs7 } from "react/jsx-runtime";
 var stack5 = { display: "flex", flexDirection: "column", gap: "14px" };
 var fieldGap2 = { display: "flex", flexDirection: "column", gap: "12px" };
 function NomadSignUp({
@@ -1219,9 +1290,22 @@ function NomadSignUp({
   appearance
 }) {
   const override = { projectId, baseUrl };
-  const { client, error: clientError } = useNomadClient(override);
+  const {
+    client,
+    projectId: resolvedProjectId,
+    baseUrl: resolvedBaseUrl,
+    error: clientError
+  } = useNomadClient(override);
   const { methods, projectName, loading, error: configError } = useNomadConfig(override);
   const { primary, radius } = resolveAppearance(appearance);
+  useEffect6(() => {
+    if (resolvedProjectId)
+      trackClientEvent({
+        projectId: resolvedProjectId,
+        baseUrl: resolvedBaseUrl,
+        type: "signup_viewed"
+      });
+  }, [resolvedProjectId, resolvedBaseUrl]);
   const [name, setName] = useState10("");
   const [email, setEmail] = useState10("");
   const [password, setPassword] = useState10("");
@@ -1260,39 +1344,40 @@ function NomadSignUp({
       "."
     ] }),
     showOAuth && /* @__PURE__ */ jsxs7("div", { style: fieldGap2, children: [
-      methods.github && /* @__PURE__ */ jsxs7(Button, { variant: "dark", radius, primary, disabled: busy !== null, onClick: () => {
-        setBusy("github");
-        client?.auth.signInWithGitHub();
-      }, children: [
-        /* @__PURE__ */ jsx8(GitHubIcon, {}),
-        " Continue with GitHub"
-      ] }),
       methods.google && /* @__PURE__ */ jsxs7(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
         setBusy("google");
         client?.auth.signInWithGoogle();
       }, children: [
         /* @__PURE__ */ jsx8(GoogleIcon, {}),
         " Continue with Google"
+      ] }),
+      methods.github && /* @__PURE__ */ jsxs7(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
+        setBusy("github");
+        client?.auth.signInWithGitHub();
+      }, children: [
+        /* @__PURE__ */ jsx8(GitHubIcon, {}),
+        " Continue with GitHub"
       ] })
     ] }),
-    showOAuth && (methods.magicLinks || methods.emailPassword) && /* @__PURE__ */ jsx8(Separator, {}),
-    methods.magicLinks && /* @__PURE__ */ jsx8(MagicLinkSection, { client, primary, radius }),
-    methods.magicLinks && methods.emailPassword && /* @__PURE__ */ jsx8(Separator, {}),
-    methods.emailPassword && /* @__PURE__ */ jsxs7("form", { onSubmit, style: stack5, children: [
-      /* @__PURE__ */ jsxs7("div", { children: [
-        /* @__PURE__ */ jsx8(Label, { children: "Name (optional)" }),
-        /* @__PURE__ */ jsx8(Input, { type: "text", value: name, onChange: setName, placeholder: "Your name", autoComplete: "name", radius, disabled: busy !== null })
+    showOAuth && (methods.emailPassword || methods.magicLinks) && /* @__PURE__ */ jsx8(Separator, {}),
+    methods.emailPassword ? /* @__PURE__ */ jsxs7(Fragment4, { children: [
+      /* @__PURE__ */ jsxs7("form", { onSubmit, style: stack5, children: [
+        /* @__PURE__ */ jsxs7("div", { children: [
+          /* @__PURE__ */ jsx8(Label, { children: "Name (optional)" }),
+          /* @__PURE__ */ jsx8(Input, { type: "text", value: name, onChange: setName, placeholder: "Your name", autoComplete: "name", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ jsxs7("div", { children: [
+          /* @__PURE__ */ jsx8(Label, { children: "Email address" }),
+          /* @__PURE__ */ jsx8(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ jsxs7("div", { children: [
+          /* @__PURE__ */ jsx8(Label, { children: "Password" }),
+          /* @__PURE__ */ jsx8(Input, { type: "password", value: password, onChange: setPassword, placeholder: "At least 8 characters", autoComplete: "new-password", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ jsx8(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Creating account\u2026" : "Continue" })
       ] }),
-      /* @__PURE__ */ jsxs7("div", { children: [
-        /* @__PURE__ */ jsx8(Label, { children: "Email address" }),
-        /* @__PURE__ */ jsx8(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
-      ] }),
-      /* @__PURE__ */ jsxs7("div", { children: [
-        /* @__PURE__ */ jsx8(Label, { children: "Password" }),
-        /* @__PURE__ */ jsx8(Input, { type: "password", value: password, onChange: setPassword, placeholder: "At least 8 characters", autoComplete: "new-password", radius, disabled: busy !== null })
-      ] }),
-      /* @__PURE__ */ jsx8(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Creating account\u2026" : "Continue" })
-    ] }),
+      methods.magicLinks && /* @__PURE__ */ jsx8(MagicLinkInlineLink, { client, email })
+    ] }) : methods.magicLinks && /* @__PURE__ */ jsx8(MagicLinkSection, { client, primary, radius }),
     /* @__PURE__ */ jsx8(ErrorText, { children: formError }),
     /* @__PURE__ */ jsxs7(Footer, { children: [
       "Already have an account? ",
@@ -1303,7 +1388,7 @@ function NomadSignUp({
 }
 
 // src/react/verify-email.tsx
-import { useEffect as useEffect5, useState as useState11 } from "react";
+import { useEffect as useEffect7, useState as useState11 } from "react";
 import { jsx as jsx9, jsxs as jsxs8 } from "react/jsx-runtime";
 function NomadVerifyEmail({
   projectId,
@@ -1317,7 +1402,7 @@ function NomadVerifyEmail({
   const [checking, setChecking] = useState11(true);
   const [resending, setResending] = useState11(false);
   const [message, setMessage] = useState11("");
-  useEffect5(() => {
+  useEffect7(() => {
     if (!client) {
       setChecking(false);
       return;
@@ -1390,7 +1475,7 @@ function NomadVerifyEmail({
 }
 
 // src/react/oauth-callback.tsx
-import { useEffect as useEffect6, useState as useState12 } from "react";
+import { useEffect as useEffect8, useState as useState12 } from "react";
 import { jsx as jsx10 } from "react/jsx-runtime";
 function NomadOAuthCallback({
   projectId,
@@ -1400,7 +1485,7 @@ function NomadOAuthCallback({
   const { client, error: clientError } = useNomadClient({ projectId, baseUrl });
   const [status, setStatus] = useState12("loading");
   const [errorMsg, setErrorMsg] = useState12("");
-  useEffect6(() => {
+  useEffect8(() => {
     if (!client) return;
     void (async () => {
       try {
@@ -1437,7 +1522,7 @@ function NomadOAuthCallback({
 }
 
 // src/react/pricing.tsx
-import { useEffect as useEffect7, useState as useState13 } from "react";
+import { useEffect as useEffect9, useState as useState13 } from "react";
 import { jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 var font4 = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 function money(cents, currency) {
@@ -1470,7 +1555,11 @@ function NomadPricing({
   const [comingSoon, setComingSoon] = useState13(false);
   const [busyId, setBusyId] = useState13(null);
   const [notice, setNotice] = useState13(null);
-  useEffect7(() => {
+  useEffect9(() => {
+    if (projectId)
+      trackClientEvent({ projectId, baseUrl, type: "pricing_viewed" });
+  }, [projectId, baseUrl]);
+  useEffect9(() => {
     if (!projectId) {
       setError(clientError ?? "Missing projectId");
       return;
@@ -1482,6 +1571,13 @@ function NomadPricing({
     };
   }, [projectId, baseUrl, clientError]);
   async function select(plan) {
+    if (projectId)
+      trackClientEvent({
+        projectId,
+        baseUrl,
+        type: "plan_selected",
+        metadata: { planId: plan.id }
+      });
     if (onPlanSelect) {
       onPlanSelect(plan);
       return;
@@ -1684,55 +1780,44 @@ function NomadPricing({
 }
 
 // src/react/preview-banner.tsx
-import { useState as useState14 } from "react";
-import { Fragment as Fragment2, jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
+import { useEffect as useEffect10, useRef, useState as useState14 } from "react";
+import { jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
 function NomadPreviewBanner({
   projectId: projectIdProp,
   baseUrl: baseUrlProp,
   forceVisible,
+  autoLogin = true,
   appearance
 } = {}) {
   const [dismissed, setDismissed] = useState14(false);
-  const [loading, setLoading] = useState14(false);
   const [error, setError] = useState14(null);
+  const autoRef = useRef(false);
   const override = projectIdProp || baseUrlProp ? { projectId: projectIdProp, baseUrl: baseUrlProp } : void 0;
-  const { user, signOut } = useNomadAuth(override);
+  const { user, loading, signOut } = useNomadAuth(override);
   const { projectId, baseUrl } = useNomadClient(override);
-  const visible = forceVisible || isPreviewMode();
-  if (!visible || dismissed) return null;
+  const previewMode = forceVisible || isPreviewMode();
+  useEffect10(() => {
+    if (!previewMode || !autoLogin) return;
+    if (!projectId) return;
+    if (loading || user) return;
+    if (hasNomadToken()) return;
+    if (autoRef.current) return;
+    autoRef.current = true;
+    skipLoginAsTestUser({ projectId, baseUrl }).catch((e) => {
+      autoRef.current = false;
+      setError(e instanceof Error ? e.message : "Test login failed");
+    });
+  }, [previewMode, autoLogin, projectId, baseUrl, loading, user]);
+  if (!previewMode || dismissed) return null;
   const productionUrl = getProductionUrl();
   const isTestUser = user?.isPreviewTestUser === true;
   const bg = appearance?.background ?? "#111111";
   const text = appearance?.textColor ?? "#fafafa";
-  const accent = appearance?.accentColor ?? "#ffffff";
-  async function handleSkip() {
-    if (!projectId) {
-      setError("No projectId configured");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      await skipLoginAsTestUser({ projectId, baseUrl });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Skip login failed");
-      setLoading(false);
-    }
-  }
   async function handleSignOut() {
     await signOut();
     if (typeof window !== "undefined") window.location.reload();
   }
-  const btn = (extra) => ({
-    border: "none",
-    borderRadius: 6,
-    padding: "6px 12px",
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: "pointer",
-    minHeight: 32,
-    ...extra
-  });
+  const status = error ? error : isTestUser ? "Browsing as test account" : "Signing in as test account\u2026";
   return /* @__PURE__ */ jsxs10(
     "div",
     {
@@ -1756,40 +1841,31 @@ function NomadPreviewBanner({
         /* @__PURE__ */ jsxs10("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
           /* @__PURE__ */ jsx12("span", { style: { fontSize: 14 }, children: "\u{1F527}" }),
           /* @__PURE__ */ jsx12("strong", { children: "Preview Mode" }),
-          /* @__PURE__ */ jsx12("span", { style: { opacity: 0.55 }, children: "\u2014 staging environment" })
+          /* @__PURE__ */ jsxs10("span", { style: { opacity: 0.6 }, children: [
+            "\u2014 ",
+            status
+          ] })
         ] }),
         /* @__PURE__ */ jsxs10("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
-          !isTestUser && !user && /* @__PURE__ */ jsx12(
+          isTestUser && /* @__PURE__ */ jsx12(
             "button",
             {
               type: "button",
-              onClick: handleSkip,
-              disabled: loading,
-              style: btn({
-                background: accent,
-                color: "#000",
-                opacity: loading ? 0.7 : 1,
-                cursor: loading ? "wait" : "pointer"
-              }),
-              children: loading ? "Logging in\u2026" : "\u2728 Skip login as test user"
+              onClick: handleSignOut,
+              style: {
+                background: "transparent",
+                color: text,
+                border: `1px solid ${text}33`,
+                borderRadius: 6,
+                padding: "6px 12px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                minHeight: 32
+              },
+              children: "Sign out test user"
             }
           ),
-          isTestUser && /* @__PURE__ */ jsxs10(Fragment2, { children: [
-            /* @__PURE__ */ jsx12("span", { style: { opacity: 0.7, fontSize: 12 }, children: "Logged in as test user" }),
-            /* @__PURE__ */ jsx12(
-              "button",
-              {
-                type: "button",
-                onClick: handleSignOut,
-                style: btn({
-                  background: "transparent",
-                  color: text,
-                  border: `1px solid ${text}33`
-                }),
-                children: "Sign out test user"
-              }
-            )
-          ] }),
           productionUrl && /* @__PURE__ */ jsx12(
             "a",
             {
@@ -1813,19 +1889,20 @@ function NomadPreviewBanner({
               type: "button",
               onClick: () => setDismissed(true),
               "aria-label": "Dismiss preview banner",
-              style: btn({
+              style: {
                 background: "transparent",
                 color: text,
+                border: "none",
+                cursor: "pointer",
                 opacity: 0.5,
-                fontWeight: 400,
                 fontSize: 14,
-                padding: "0 6px"
-              }),
+                padding: "0 6px",
+                minHeight: 32
+              },
               children: "\u2715"
             }
           )
-        ] }),
-        error && /* @__PURE__ */ jsx12("div", { style: { width: "100%", color: "#f87171", fontSize: 12, marginTop: 2 }, children: error })
+        ] })
       ]
     }
   );

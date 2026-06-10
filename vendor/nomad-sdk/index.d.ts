@@ -123,6 +123,8 @@ declare class NomadError extends Error {
 declare function isPreviewMode(): boolean;
 /** The production URL for this SaaS, derived from a preview-*.nomad.red host. */
 declare function getProductionUrl(): string | null;
+/** Whether a Nomad session cookie is already present (avoids auto-login loops). */
+declare function hasNomadToken(): boolean;
 /**
  * Log in as the project's preview test user (preview mode only). On success the
  * session token is written to the nomad_token cookie and the page reloads.
@@ -132,4 +134,16 @@ declare function skipLoginAsTestUser(opts: {
     baseUrl?: string;
 }): Promise<void>;
 
-export { type AuthModule, AuthResponse, ChangePasswordInput, DeleteAccountInput, MagicLinkInput, type NomadClient, NomadConfig, NomadError, type NomadErrorCode, NomadSession, NomadUser, OAuthCallbackResult, OAuthSignInOptions, Profile, RequestPasswordResetInput, ResendVerificationInput, ResetPasswordInput, ResetPasswordResponse, SendEmailVerificationInput, SignInInput, SignUpInput, SuccessResponse, TwoFactorChallenge, TwoFactorEnableResult, TwoFactorSetup, UpdateProfileInput, Verify2FAInput, createNomadClient, getProductionUrl, isPreviewMode, nomad, skipLoginAsTestUser };
+/**
+ * Client-side analytics beacon. Fires a lightweight event to Nomad (view/click)
+ * — the creator's app calls nothing; the Nomad components fire these for it.
+ * Fire-and-forget, never throws, survives navigation (keepalive).
+ */
+declare function trackClientEvent(opts: {
+    projectId: string;
+    baseUrl?: string;
+    type: "signin_viewed" | "signup_viewed" | "pricing_viewed" | "plan_selected" | "product_viewed" | "product_clicked";
+    metadata?: Record<string, unknown>;
+}): void;
+
+export { type AuthModule, AuthResponse, ChangePasswordInput, DeleteAccountInput, MagicLinkInput, type NomadClient, NomadConfig, NomadError, type NomadErrorCode, NomadSession, NomadUser, OAuthCallbackResult, OAuthSignInOptions, Profile, RequestPasswordResetInput, ResendVerificationInput, ResetPasswordInput, ResetPasswordResponse, SendEmailVerificationInput, SignInInput, SignUpInput, SuccessResponse, TwoFactorChallenge, TwoFactorEnableResult, TwoFactorSetup, UpdateProfileInput, Verify2FAInput, createNomadClient, getProductionUrl, hasNomadToken, isPreviewMode, nomad, skipLoginAsTestUser, trackClientEvent };

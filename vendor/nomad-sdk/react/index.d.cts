@@ -155,6 +155,8 @@ interface NomadPreviewBannerProps {
     baseUrl?: string;
     /** Force visibility (default: auto-detect via isPreviewMode()). */
     forceVisible?: boolean;
+    /** Disable the automatic test-user login (keeps just the banner). */
+    autoLogin?: boolean;
     appearance?: {
         background?: string;
         textColor?: string;
@@ -162,9 +164,10 @@ interface NomadPreviewBannerProps {
     };
 }
 /**
- * Sticky "Preview Mode" banner with a one-click "Skip login as test user".
- * Renders ONLY on a Nomad preview deployment — never in production.
+ * On a Nomad preview deployment this AUTOMATICALLY signs the visitor in as the
+ * project's test user (so every auth page is browsable, no account needed) and
+ * shows a small "Preview Mode" bar. Renders nothing in production.
  */
-declare function NomadPreviewBanner({ projectId: projectIdProp, baseUrl: baseUrlProp, forceVisible, appearance, }?: NomadPreviewBannerProps): react_jsx_runtime.JSX.Element | null;
+declare function NomadPreviewBanner({ projectId: projectIdProp, baseUrl: baseUrlProp, forceVisible, autoLogin, appearance, }?: NomadPreviewBannerProps): react_jsx_runtime.JSX.Element | null;
 
 export { type Appearance, type AuthMethodsConfig, type ClientOverride, NomadOAuthCallback, type NomadOAuthCallbackProps, type NomadPlan, NomadPreviewBanner, type NomadPreviewBannerProps, NomadPricing, type NomadPricingProps, NomadProvider, NomadSignIn, type NomadSignInProps, NomadSignUp, type NomadSignUpProps, NomadUserButton, type NomadUserButtonProps, NomadUserProfile, type NomadUserProfileProps, NomadVerifyEmail, type NomadVerifyEmailProps, type UseNomadAuthResult, type UseNomadConfigResult, type UseNomadProfileResult, type UseNomadSessionsResult, useNomadAuth, useNomadConfig, useNomadProfile, useNomadSessions };

@@ -1431,6 +1431,25 @@ function useNomadConfig(override) {
 // src/react/sign-in.tsx
 var import_react10 = require("react");
 
+// src/events.ts
+function trackClientEvent(opts) {
+  if (typeof window === "undefined" || !opts.projectId) return;
+  const base = opts.baseUrl ?? "https://nomad.red";
+  try {
+    void fetch(`${base}/api/sdk/v1/events`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Nomad-Project-Id": opts.projectId
+      },
+      body: JSON.stringify({ type: opts.type, metadata: opts.metadata }),
+      keepalive: true
+    }).catch(() => {
+    });
+  } catch {
+  }
+}
+
 // src/react/magic-link-section.tsx
 var import_react9 = require("react");
 var import_jsx_runtime6 = require("react/jsx-runtime");
@@ -1489,6 +1508,61 @@ function MagicLinkSection({
     state === "error" && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ErrorText, { children: error })
   ] });
 }
+function MagicLinkInlineLink({
+  client,
+  email,
+  redirectTo
+}) {
+  const [state, setState] = (0, import_react9.useState)("idle");
+  const [error, setError] = (0, import_react9.useState)("");
+  const target = redirectTo ?? (typeof window !== "undefined" ? window.location.origin + "/oauth-callback" : void 0);
+  async function send() {
+    if (!client) return;
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setError("Enter your email above first.");
+      setState("error");
+      return;
+    }
+    setState("sending");
+    setError("");
+    try {
+      await client.auth.signInWithMagicLink({ email, redirectTo: target });
+      setState("sent");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not send the link.");
+      setState("error");
+    }
+  }
+  if (state === "sent") {
+    return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("p", { style: { margin: "12px 0 0", textAlign: "center", fontSize: "13px", color: "#16a34a" }, children: [
+      "\u2713 Magic link sent to ",
+      email
+    ] });
+  }
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_jsx_runtime6.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+      "button",
+      {
+        type: "button",
+        onClick: () => void send(),
+        disabled: state === "sending",
+        style: {
+          margin: "12px 0 0",
+          width: "100%",
+          background: "none",
+          border: "none",
+          padding: 0,
+          fontSize: "13px",
+          color: "#71717a",
+          textAlign: "center",
+          cursor: state === "sending" ? "default" : "pointer"
+        },
+        children: state === "sending" ? "Sending\u2026" : "Email me a magic sign-in link instead"
+      }
+    ),
+    state === "error" && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(ErrorText, { children: error })
+  ] });
+}
 
 // src/react/sign-in.tsx
 var import_jsx_runtime7 = require("react/jsx-runtime");
@@ -1502,9 +1576,22 @@ function NomadSignIn({
   appearance
 }) {
   const override = { projectId, baseUrl };
-  const { client, error: clientError } = useNomadClient(override);
+  const {
+    client,
+    projectId: resolvedProjectId,
+    baseUrl: resolvedBaseUrl,
+    error: clientError
+  } = useNomadClient(override);
   const { methods, projectName, loading, error: configError } = useNomadConfig(override);
   const { primary, radius } = resolveAppearance(appearance);
+  (0, import_react10.useEffect)(() => {
+    if (resolvedProjectId)
+      trackClientEvent({
+        projectId: resolvedProjectId,
+        baseUrl: resolvedBaseUrl,
+        type: "signin_viewed"
+      });
+  }, [resolvedProjectId, resolvedBaseUrl]);
   const [email, setEmail] = (0, import_react10.useState)("");
   const [password, setPassword] = (0, import_react10.useState)("");
   const [busy, setBusy] = (0, import_react10.useState)(null);
@@ -1592,36 +1679,37 @@ function NomadSignIn({
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Subtitle, { children: "Welcome back! Please sign in to continue" }),
     showOAuth && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { style: fieldGap, children: [
-      methods.github && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(Button, { variant: "dark", radius, primary, disabled: busy !== null, onClick: () => {
-        setBusy("github");
-        client?.auth.signInWithGitHub();
-      }, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(GitHubIcon, {}),
-        " Continue with GitHub"
-      ] }),
       methods.google && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
         setBusy("google");
         client?.auth.signInWithGoogle();
       }, children: [
         /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(GoogleIcon, {}),
         " Continue with Google"
+      ] }),
+      methods.github && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
+        setBusy("github");
+        client?.auth.signInWithGitHub();
+      }, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(GitHubIcon, {}),
+        " Continue with GitHub"
       ] })
     ] }),
-    showOAuth && (methods.magicLinks || methods.emailPassword) && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Separator, {}),
-    methods.magicLinks && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(MagicLinkSection, { client, primary, radius }),
-    methods.magicLinks && methods.emailPassword && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Separator, {}),
-    methods.emailPassword && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("form", { onSubmit, style: stack4, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Label, { children: "Email address" }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
+    showOAuth && (methods.emailPassword || methods.magicLinks) && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Separator, {}),
+    methods.emailPassword ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(import_jsx_runtime7.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("form", { onSubmit, style: stack4, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Label, { children: "Email address" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Label, { children: "Password" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Input, { type: "password", value: password, onChange: setPassword, placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", autoComplete: "current-password", radius, disabled: busy !== null }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { style: { marginTop: 6 }, children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("a", { href: "/reset-password", style: { fontSize: "12px", color: "#71717a", textDecoration: "underline" }, children: "Forgot password?" }) })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Signing in\u2026" : "Continue" })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Label, { children: "Password" }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Input, { type: "password", value: password, onChange: setPassword, placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", autoComplete: "current-password", radius, disabled: busy !== null }),
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { style: { marginTop: 6 }, children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("a", { href: "/reset-password", style: { fontSize: "12px", color: "#71717a", textDecoration: "underline" }, children: "Forgot password?" }) })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Signing in\u2026" : "Continue" })
-    ] }),
+      methods.magicLinks && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(MagicLinkInlineLink, { client, email })
+    ] }) : methods.magicLinks && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(MagicLinkSection, { client, primary, radius }),
     /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(ErrorText, { children: formError }),
     /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(Footer, { children: [
       "Don't have an account? ",
@@ -1644,9 +1732,22 @@ function NomadSignUp({
   appearance
 }) {
   const override = { projectId, baseUrl };
-  const { client, error: clientError } = useNomadClient(override);
+  const {
+    client,
+    projectId: resolvedProjectId,
+    baseUrl: resolvedBaseUrl,
+    error: clientError
+  } = useNomadClient(override);
   const { methods, projectName, loading, error: configError } = useNomadConfig(override);
   const { primary, radius } = resolveAppearance(appearance);
+  (0, import_react11.useEffect)(() => {
+    if (resolvedProjectId)
+      trackClientEvent({
+        projectId: resolvedProjectId,
+        baseUrl: resolvedBaseUrl,
+        type: "signup_viewed"
+      });
+  }, [resolvedProjectId, resolvedBaseUrl]);
   const [name, setName] = (0, import_react11.useState)("");
   const [email, setEmail] = (0, import_react11.useState)("");
   const [password, setPassword] = (0, import_react11.useState)("");
@@ -1685,39 +1786,40 @@ function NomadSignUp({
       "."
     ] }),
     showOAuth && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { style: fieldGap2, children: [
-      methods.github && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(Button, { variant: "dark", radius, primary, disabled: busy !== null, onClick: () => {
-        setBusy("github");
-        client?.auth.signInWithGitHub();
-      }, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(GitHubIcon, {}),
-        " Continue with GitHub"
-      ] }),
       methods.google && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
         setBusy("google");
         client?.auth.signInWithGoogle();
       }, children: [
         /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(GoogleIcon, {}),
         " Continue with Google"
+      ] }),
+      methods.github && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(Button, { variant: "outline", radius, primary, disabled: busy !== null, onClick: () => {
+        setBusy("github");
+        client?.auth.signInWithGitHub();
+      }, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(GitHubIcon, {}),
+        " Continue with GitHub"
       ] })
     ] }),
-    showOAuth && (methods.magicLinks || methods.emailPassword) && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Separator, {}),
-    methods.magicLinks && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(MagicLinkSection, { client, primary, radius }),
-    methods.magicLinks && methods.emailPassword && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Separator, {}),
-    methods.emailPassword && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("form", { onSubmit, style: stack5, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Label, { children: "Name (optional)" }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Input, { type: "text", value: name, onChange: setName, placeholder: "Your name", autoComplete: "name", radius, disabled: busy !== null })
+    showOAuth && (methods.emailPassword || methods.magicLinks) && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Separator, {}),
+    methods.emailPassword ? /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(import_jsx_runtime8.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("form", { onSubmit, style: stack5, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Label, { children: "Name (optional)" }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Input, { type: "text", value: name, onChange: setName, placeholder: "Your name", autoComplete: "name", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Label, { children: "Email address" }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Label, { children: "Password" }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Input, { type: "password", value: password, onChange: setPassword, placeholder: "At least 8 characters", autoComplete: "new-password", radius, disabled: busy !== null })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Creating account\u2026" : "Continue" })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Label, { children: "Email address" }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Input, { type: "email", value: email, onChange: setEmail, placeholder: "you@example.com", autoComplete: "email", radius, disabled: busy !== null })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Label, { children: "Password" }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Input, { type: "password", value: password, onChange: setPassword, placeholder: "At least 8 characters", autoComplete: "new-password", radius, disabled: busy !== null })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Creating account\u2026" : "Continue" })
-    ] }),
+      methods.magicLinks && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(MagicLinkInlineLink, { client, email })
+    ] }) : methods.magicLinks && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(MagicLinkSection, { client, primary, radius }),
     /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(ErrorText, { children: formError }),
     /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(Footer, { children: [
       "Already have an account? ",
@@ -1896,6 +1998,10 @@ function NomadPricing({
   const [busyId, setBusyId] = (0, import_react14.useState)(null);
   const [notice, setNotice] = (0, import_react14.useState)(null);
   (0, import_react14.useEffect)(() => {
+    if (projectId)
+      trackClientEvent({ projectId, baseUrl, type: "pricing_viewed" });
+  }, [projectId, baseUrl]);
+  (0, import_react14.useEffect)(() => {
     if (!projectId) {
       setError(clientError ?? "Missing projectId");
       return;
@@ -1907,6 +2013,13 @@ function NomadPricing({
     };
   }, [projectId, baseUrl, clientError]);
   async function select(plan) {
+    if (projectId)
+      trackClientEvent({
+        projectId,
+        baseUrl,
+        type: "plan_selected",
+        metadata: { planId: plan.id }
+      });
     if (onPlanSelect) {
       onPlanSelect(plan);
       return;
@@ -2134,6 +2247,10 @@ function getProductionUrl() {
   }
   return null;
 }
+function hasNomadToken() {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split(";").some((c) => c.trim().startsWith("nomad_token="));
+}
 function setNomadTokenCookie(token) {
   if (typeof document === "undefined") return;
   const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
@@ -2167,49 +2284,38 @@ function NomadPreviewBanner({
   projectId: projectIdProp,
   baseUrl: baseUrlProp,
   forceVisible,
+  autoLogin = true,
   appearance
 } = {}) {
   const [dismissed, setDismissed] = (0, import_react15.useState)(false);
-  const [loading, setLoading] = (0, import_react15.useState)(false);
   const [error, setError] = (0, import_react15.useState)(null);
+  const autoRef = (0, import_react15.useRef)(false);
   const override = projectIdProp || baseUrlProp ? { projectId: projectIdProp, baseUrl: baseUrlProp } : void 0;
-  const { user, signOut } = useNomadAuth(override);
+  const { user, loading, signOut } = useNomadAuth(override);
   const { projectId, baseUrl } = useNomadClient(override);
-  const visible = forceVisible || isPreviewMode();
-  if (!visible || dismissed) return null;
+  const previewMode = forceVisible || isPreviewMode();
+  (0, import_react15.useEffect)(() => {
+    if (!previewMode || !autoLogin) return;
+    if (!projectId) return;
+    if (loading || user) return;
+    if (hasNomadToken()) return;
+    if (autoRef.current) return;
+    autoRef.current = true;
+    skipLoginAsTestUser({ projectId, baseUrl }).catch((e) => {
+      autoRef.current = false;
+      setError(e instanceof Error ? e.message : "Test login failed");
+    });
+  }, [previewMode, autoLogin, projectId, baseUrl, loading, user]);
+  if (!previewMode || dismissed) return null;
   const productionUrl = getProductionUrl();
   const isTestUser = user?.isPreviewTestUser === true;
   const bg = appearance?.background ?? "#111111";
   const text = appearance?.textColor ?? "#fafafa";
-  const accent = appearance?.accentColor ?? "#ffffff";
-  async function handleSkip() {
-    if (!projectId) {
-      setError("No projectId configured");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      await skipLoginAsTestUser({ projectId, baseUrl });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Skip login failed");
-      setLoading(false);
-    }
-  }
   async function handleSignOut() {
     await signOut();
     if (typeof window !== "undefined") window.location.reload();
   }
-  const btn = (extra) => ({
-    border: "none",
-    borderRadius: 6,
-    padding: "6px 12px",
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: "pointer",
-    minHeight: 32,
-    ...extra
-  });
+  const status = error ? error : isTestUser ? "Browsing as test account" : "Signing in as test account\u2026";
   return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
     "div",
     {
@@ -2233,40 +2339,31 @@ function NomadPreviewBanner({
         /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
           /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { style: { fontSize: 14 }, children: "\u{1F527}" }),
           /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("strong", { children: "Preview Mode" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { style: { opacity: 0.55 }, children: "\u2014 staging environment" })
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { style: { opacity: 0.6 }, children: [
+            "\u2014 ",
+            status
+          ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
-          !isTestUser && !user && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+          isTestUser && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
             "button",
             {
               type: "button",
-              onClick: handleSkip,
-              disabled: loading,
-              style: btn({
-                background: accent,
-                color: "#000",
-                opacity: loading ? 0.7 : 1,
-                cursor: loading ? "wait" : "pointer"
-              }),
-              children: loading ? "Logging in\u2026" : "\u2728 Skip login as test user"
+              onClick: handleSignOut,
+              style: {
+                background: "transparent",
+                color: text,
+                border: `1px solid ${text}33`,
+                borderRadius: 6,
+                padding: "6px 12px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                minHeight: 32
+              },
+              children: "Sign out test user"
             }
           ),
-          isTestUser && /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(import_jsx_runtime12.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { style: { opacity: 0.7, fontSize: 12 }, children: "Logged in as test user" }),
-            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
-              "button",
-              {
-                type: "button",
-                onClick: handleSignOut,
-                style: btn({
-                  background: "transparent",
-                  color: text,
-                  border: `1px solid ${text}33`
-                }),
-                children: "Sign out test user"
-              }
-            )
-          ] }),
           productionUrl && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
             "a",
             {
@@ -2290,19 +2387,20 @@ function NomadPreviewBanner({
               type: "button",
               onClick: () => setDismissed(true),
               "aria-label": "Dismiss preview banner",
-              style: btn({
+              style: {
                 background: "transparent",
                 color: text,
+                border: "none",
+                cursor: "pointer",
                 opacity: 0.5,
-                fontWeight: 400,
                 fontSize: 14,
-                padding: "0 6px"
-              }),
+                padding: "0 6px",
+                minHeight: 32
+              },
               children: "\u2715"
             }
           )
-        ] }),
-        error && /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { style: { width: "100%", color: "#f87171", fontSize: 12, marginTop: 2 }, children: error })
+        ] })
       ]
     }
   );

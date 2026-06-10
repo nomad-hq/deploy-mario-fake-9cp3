@@ -417,6 +417,10 @@ function getProductionUrl() {
   }
   return null;
 }
+function hasNomadToken() {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split(";").some((c) => c.trim().startsWith("nomad_token="));
+}
 function setNomadTokenCookie(token) {
   if (typeof document === "undefined") return;
   const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
@@ -444,11 +448,32 @@ async function skipLoginAsTestUser(opts) {
   if (typeof window !== "undefined") window.location.reload();
 }
 
+// src/events.ts
+function trackClientEvent(opts) {
+  if (typeof window === "undefined" || !opts.projectId) return;
+  const base = opts.baseUrl ?? "https://nomad.red";
+  try {
+    void fetch(`${base}/api/sdk/v1/events`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Nomad-Project-Id": opts.projectId
+      },
+      body: JSON.stringify({ type: opts.type, metadata: opts.metadata }),
+      keepalive: true
+    }).catch(() => {
+    });
+  } catch {
+  }
+}
+
 export {
   NomadError,
   createNomadClient,
   nomad,
   isPreviewMode,
   getProductionUrl,
-  skipLoginAsTestUser
+  hasNomadToken,
+  skipLoginAsTestUser,
+  trackClientEvent
 };
