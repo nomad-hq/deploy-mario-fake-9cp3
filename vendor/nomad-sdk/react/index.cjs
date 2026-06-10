@@ -654,7 +654,10 @@ var css = `
 .nomad-auth .nomad-textlink:hover{color:${C.fg}}
 .nomad-auth a.nomad-footlink:hover{text-decoration:underline}
 `;
-function Screen({ children }) {
+function Screen({
+  children,
+  background = "transparent"
+}) {
   return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
     "div",
     {
@@ -666,8 +669,7 @@ function Screen({ children }) {
         justifyContent: "center",
         padding: "24px",
         fontFamily: font,
-        color: C.fg,
-        background: "radial-gradient(1100px 620px at 50% -15%, #1a1a1a 0%, #000000 60%)"
+        background
       },
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("style", { dangerouslySetInnerHTML: { __html: css } }),
