@@ -203,62 +203,107 @@ import { useState as useState4 } from "react";
 
 // src/react/ui.tsx
 import { jsx as jsx2, jsxs } from "react/jsx-runtime";
+var C = {
+  bg: "#000000",
+  surface: "#0a0a0a",
+  surface2: "#111111",
+  lineSubtle: "rgba(255,255,255,0.06)",
+  line: "rgba(255,255,255,0.10)",
+  lineStrong: "rgba(255,255,255,0.16)",
+  fg: "#ededed",
+  muted: "#a1a1a1",
+  faint: "#666666",
+  accent: "#ffffff",
+  danger: "#ee4444"
+};
 function resolveAppearance(a) {
   return {
-    primary: a?.primaryColor ?? "#18181b",
+    primary: a?.primaryColor ?? C.accent,
     radius: a?.borderRadius ?? "8px"
   };
 }
-var font = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+var font = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+var css = `
+.nomad-auth ::placeholder{color:${C.faint};opacity:1}
+.nomad-auth .nomad-input:focus{border-color:${C.lineStrong};box-shadow:0 0 0 1px ${C.lineStrong}}
+.nomad-auth .nomad-oauth:hover:not(:disabled){background:${C.surface2};border-color:${C.lineStrong}}
+.nomad-auth .nomad-primary:hover:not(:disabled){background:#e5e5e5;border-color:#e5e5e5}
+.nomad-auth .nomad-textlink:hover{color:${C.fg}}
+.nomad-auth a.nomad-footlink:hover{text-decoration:underline}
+`;
 function Screen({ children }) {
-  return /* @__PURE__ */ jsx2(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
+      className: "nomad-auth",
       style: {
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#f4f4f5",
         padding: "24px",
-        fontFamily: font
+        fontFamily: font,
+        color: C.fg,
+        background: "radial-gradient(1100px 620px at 50% -15%, #1a1a1a 0%, #000000 60%)"
       },
-      children
+      children: [
+        /* @__PURE__ */ jsx2("style", { dangerouslySetInnerHTML: { __html: css } }),
+        children
+      ]
     }
   );
 }
-function Card({
-  children,
-  radius
-}) {
+function Card({ children }) {
   return /* @__PURE__ */ jsx2(
     "div",
     {
       style: {
         width: "100%",
-        maxWidth: "400px",
-        background: "#ffffff",
-        border: "1px solid #e4e4e7",
-        borderRadius: `calc(${radius} + 4px)`,
-        boxShadow: "0 10px 30px -12px rgba(0,0,0,0.18)",
-        padding: "32px",
+        maxWidth: "384px",
+        background: "rgba(0,0,0,0.85)",
+        border: `1px solid ${C.line}`,
+        borderRadius: "16px",
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.6)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        padding: "28px",
         boxSizing: "border-box"
       },
       children
     }
   );
 }
+function BrandMark(_props) {
+  return /* @__PURE__ */ jsx2("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ jsx2(
+    "svg",
+    {
+      viewBox: "110 440 804 175",
+      width: "76",
+      height: 76 * 175 / 804,
+      style: { display: "inline-block" },
+      "aria-hidden": "true",
+      children: /* @__PURE__ */ jsx2(
+        "path",
+        {
+          d: "M128 585 C265 573 353 500 447 455 C490 434 534 434 577 455 C671 500 759 573 896 585 C736 595 643 530 555 504 C525 495 499 495 469 504 C381 530 288 595 128 585Z",
+          fill: "#E0C283"
+        }
+      )
+    }
+  ) });
+}
 function Title({ children }) {
   return /* @__PURE__ */ jsx2(
     "h1",
     {
       style: {
-        margin: "0 0 6px",
-        fontSize: "21px",
-        fontWeight: 700,
+        margin: "20px 0 0",
+        fontSize: "19px",
+        fontWeight: 600,
+        letterSpacing: "-0.02em",
         textAlign: "center",
-        letterSpacing: "-0.01em",
-        color: "#18181b"
+        color: C.fg,
+        fontFamily: font
       },
       children
     }
@@ -269,10 +314,10 @@ function Subtitle({ children }) {
     "p",
     {
       style: {
-        margin: "0 0 24px",
-        fontSize: "14px",
+        margin: "4px 0 28px",
+        fontSize: "13px",
         textAlign: "center",
-        color: "#71717a",
+        color: C.muted,
         fontFamily: font
       },
       children
@@ -286,33 +331,11 @@ function Label({ children }) {
       style: {
         display: "block",
         marginBottom: "6px",
-        fontSize: "13px",
-        fontWeight: 600,
-        color: "#3f3f46",
+        fontSize: "12px",
+        color: C.faint,
         fontFamily: font
       },
       children
-    }
-  );
-}
-function BrandMark({ name }) {
-  return /* @__PURE__ */ jsx2(
-    "div",
-    {
-      style: {
-        width: 44,
-        height: 44,
-        margin: "0 auto 16px",
-        borderRadius: "12px",
-        background: "#18181b",
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 20,
-        fontWeight: 700
-      },
-      children: (name ?? "\u2022").slice(0, 1).toUpperCase()
     }
   );
 }
@@ -322,37 +345,59 @@ function Button({
   disabled,
   variant = "primary",
   primary,
-  radius,
   type = "button"
 }) {
   const base = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "8px",
+    gap: "10px",
     width: "100%",
-    padding: "12px 16px",
-    fontSize: "14px",
-    fontWeight: 600,
+    fontSize: "13px",
+    fontWeight: 500,
     fontFamily: font,
-    borderRadius: radius,
     cursor: disabled ? "default" : "pointer",
-    opacity: disabled ? 0.6 : 1,
-    border: "1px solid transparent",
-    boxSizing: "border-box"
+    opacity: disabled ? 0.5 : 1,
+    boxSizing: "border-box",
+    transition: "background .15s, border-color .15s"
   };
-  const variants = {
-    primary: { background: primary, color: "#ffffff" },
-    dark: { background: "#18181b", color: "#ffffff" },
-    outline: { background: "#ffffff", color: "#18181b", borderColor: "#e4e4e7" }
-  };
+  if (variant === "primary") {
+    return /* @__PURE__ */ jsx2(
+      "button",
+      {
+        className: "nomad-primary",
+        type,
+        onClick,
+        disabled,
+        style: {
+          ...base,
+          height: "32px",
+          padding: "0 12px",
+          borderRadius: "6px",
+          background: primary,
+          color: "#000000",
+          border: `1px solid ${primary}`
+        },
+        children
+      }
+    );
+  }
   return /* @__PURE__ */ jsx2(
     "button",
     {
+      className: "nomad-oauth",
       type,
       onClick,
       disabled,
-      style: { ...base, ...variants[variant] },
+      style: {
+        ...base,
+        height: "40px",
+        padding: "0 12px",
+        borderRadius: "8px",
+        background: "transparent",
+        color: C.fg,
+        border: `1px solid ${C.line}`
+      },
       children
     }
   );
@@ -361,6 +406,7 @@ function Input(props) {
   return /* @__PURE__ */ jsx2(
     "input",
     {
+      className: "nomad-input",
       type: props.type,
       value: props.value,
       placeholder: props.placeholder,
@@ -369,16 +415,17 @@ function Input(props) {
       onChange: (e) => props.onChange(e.target.value),
       style: {
         width: "100%",
-        padding: "11px 12px",
-        // 16px so iOS Safari doesn't auto-zoom the page on focus.
-        fontSize: "16px",
+        height: "40px",
+        padding: "0 12px",
+        fontSize: "13px",
         fontFamily: font,
-        color: "#18181b",
-        background: "#ffffff",
-        border: "1px solid #d4d4d8",
-        borderRadius: props.radius,
+        color: C.fg,
+        background: C.bg,
+        border: `1px solid ${C.lineSubtle}`,
+        borderRadius: "6px",
         outline: "none",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        transition: "border-color .15s, box-shadow .15s"
       }
     }
   );
@@ -387,26 +434,27 @@ function Separator() {
   return /* @__PURE__ */ jsxs(
     "div",
     {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        margin: "20px 0"
-      },
+      style: { display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" },
       children: [
-        /* @__PURE__ */ jsx2("div", { style: { height: "1px", flex: 1, background: "#e4e4e7" } }),
-        /* @__PURE__ */ jsx2("span", { style: { fontSize: "12px", color: "#a1a1aa" }, children: "or" }),
-        /* @__PURE__ */ jsx2("div", { style: { height: "1px", flex: 1, background: "#e4e4e7" } })
+        /* @__PURE__ */ jsx2("div", { style: { height: "1px", flex: 1, background: C.lineSubtle } }),
+        /* @__PURE__ */ jsx2(
+          "span",
+          {
+            style: { fontSize: "11px", textTransform: "uppercase", color: C.faint },
+            children: "or"
+          }
+        ),
+        /* @__PURE__ */ jsx2("div", { style: { height: "1px", flex: 1, background: C.lineSubtle } })
       ]
     }
   );
 }
 function ErrorText({ children }) {
   if (!children) return null;
-  return /* @__PURE__ */ jsx2("p", { style: { margin: "8px 0 0", fontSize: "13px", color: "#dc2626" }, children });
+  return /* @__PURE__ */ jsx2("p", { style: { margin: "8px 0 0", fontSize: "12px", color: C.danger }, children });
 }
 function MutedLink({ href, children }) {
-  return /* @__PURE__ */ jsx2("a", { href, style: { color: "#18181b", textDecoration: "underline" }, children });
+  return /* @__PURE__ */ jsx2("a", { className: "nomad-footlink", href, style: { color: C.fg, textDecoration: "none" }, children });
 }
 function Footer({ children }) {
   return /* @__PURE__ */ jsx2(
@@ -414,9 +462,9 @@ function Footer({ children }) {
     {
       style: {
         margin: "20px 0 0",
-        fontSize: "13px",
+        fontSize: "12px",
         textAlign: "center",
-        color: "#71717a",
+        color: C.muted,
         fontFamily: font
       },
       children
@@ -424,24 +472,17 @@ function Footer({ children }) {
   );
 }
 function SecuredByNomad() {
-  return /* @__PURE__ */ jsxs(
+  return /* @__PURE__ */ jsx2(
     "p",
     {
       style: {
-        margin: "20px 0 0",
+        margin: "24px 0 0",
         textAlign: "center",
         fontSize: "11px",
-        color: "#a1a1aa",
-        fontFamily: font,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "5px"
+        color: C.faint,
+        fontFamily: font
       },
-      children: [
-        /* @__PURE__ */ jsx2("svg", { width: "11", height: "11", viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": true, children: /* @__PURE__ */ jsx2("path", { d: "M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm-1 16-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10l-7 7Z" }) }),
-        "Secured by Nomad"
-      ]
+      children: "Secured by Nomad"
     }
   );
 }
@@ -461,9 +502,9 @@ function CenterMessage({
   body,
   tone = "muted"
 }) {
-  const color = tone === "error" ? "#dc2626" : tone === "success" ? "#16a34a" : "#71717a";
-  return /* @__PURE__ */ jsxs("div", { style: { textAlign: "center", fontFamily: font }, children: [
-    title && /* @__PURE__ */ jsx2("h1", { style: { margin: "0 0 8px", fontSize: "18px", fontWeight: 700, color: "#18181b" }, children: title }),
+  const color = tone === "error" ? C.danger : tone === "success" ? "#22c55e" : C.muted;
+  return /* @__PURE__ */ jsxs("div", { style: { textAlign: "center", fontFamily: font, color: C.fg }, children: [
+    title && /* @__PURE__ */ jsx2("h1", { style: { margin: "0 0 8px", fontSize: "18px", fontWeight: 600, color: C.fg }, children: title }),
     /* @__PURE__ */ jsx2("p", { style: { margin: 0, fontSize: "14px", lineHeight: 1.6, color }, children: body })
   ] });
 }
@@ -1040,8 +1081,8 @@ function MagicLinkSection({
   }
   if (state === "sent") {
     return /* @__PURE__ */ jsxs5("div", { style: { textAlign: "center" }, children: [
-      /* @__PURE__ */ jsx6("p", { style: { margin: "0 0 4px", fontSize: "14px", fontWeight: 600, color: "#16a34a" }, children: "\u2713 Check your inbox" }),
-      /* @__PURE__ */ jsxs5("p", { style: { margin: "0 0 16px", fontSize: "13px", lineHeight: 1.6, color: "#71717a" }, children: [
+      /* @__PURE__ */ jsx6("p", { style: { margin: "0 0 4px", fontSize: "14px", fontWeight: 600, color: "#22c55e" }, children: "\u2713 Check your inbox" }),
+      /* @__PURE__ */ jsxs5("p", { style: { margin: "0 0 16px", fontSize: "13px", lineHeight: 1.6, color: "#a1a1a1" }, children: [
         "We sent a magic link to ",
         /* @__PURE__ */ jsx6("strong", { children: email }),
         ". Click it to sign in."
@@ -1092,7 +1133,7 @@ function MagicLinkInlineLink({
     }
   }
   if (state === "sent") {
-    return /* @__PURE__ */ jsxs5("p", { style: { margin: "12px 0 0", textAlign: "center", fontSize: "13px", color: "#16a34a" }, children: [
+    return /* @__PURE__ */ jsxs5("p", { style: { margin: "12px 0 0", textAlign: "center", fontSize: "13px", color: "#22c55e" }, children: [
       "\u2713 Magic link sent to ",
       email
     ] });
@@ -1102,6 +1143,7 @@ function MagicLinkInlineLink({
       "button",
       {
         type: "button",
+        className: "nomad-textlink",
         onClick: () => void send(),
         disabled: state === "sending",
         style: {
@@ -1111,7 +1153,7 @@ function MagicLinkInlineLink({
           border: "none",
           padding: 0,
           fontSize: "13px",
-          color: "#71717a",
+          color: "#a1a1a1",
           textAlign: "center",
           cursor: state === "sending" ? "default" : "pointer"
         },
@@ -1124,8 +1166,8 @@ function MagicLinkInlineLink({
 
 // src/react/sign-in.tsx
 import { Fragment as Fragment3, jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
-var stack4 = { display: "flex", flexDirection: "column", gap: "14px" };
-var fieldGap = { display: "flex", flexDirection: "column", gap: "12px" };
+var stack4 = { display: "flex", flexDirection: "column", gap: "12px" };
+var fieldGap = { display: "flex", flexDirection: "column", gap: "8px" };
 function NomadSignIn({
   projectId,
   baseUrl,
@@ -1223,7 +1265,7 @@ function NomadSignIn({
         ] }),
         /* @__PURE__ */ jsx7(Button, { type: "submit", variant: "primary", primary, radius, disabled: busy === "2fa", children: busy === "2fa" ? "Verifying\u2026" : "Verify" }),
         /* @__PURE__ */ jsx7(ErrorText, { children: formError }),
-        /* @__PURE__ */ jsx7("p", { style: { margin: 0, fontSize: 12, textAlign: "center", color: "#a1a1aa" }, children: "You can also enter one of your backup codes." })
+        /* @__PURE__ */ jsx7("p", { style: { margin: 0, fontSize: 12, textAlign: "center", color: "#a1a1a1" }, children: "You can also enter one of your backup codes." })
       ] }),
       /* @__PURE__ */ jsx7(SecuredByNomad, {})
     ] }) });
@@ -1262,7 +1304,7 @@ function NomadSignIn({
         /* @__PURE__ */ jsxs6("div", { children: [
           /* @__PURE__ */ jsx7(Label, { children: "Password" }),
           /* @__PURE__ */ jsx7(Input, { type: "password", value: password, onChange: setPassword, placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", autoComplete: "current-password", radius, disabled: busy !== null }),
-          /* @__PURE__ */ jsx7("div", { style: { marginTop: 6 }, children: /* @__PURE__ */ jsx7("a", { href: "/reset-password", style: { fontSize: "12px", color: "#71717a", textDecoration: "underline" }, children: "Forgot password?" }) })
+          /* @__PURE__ */ jsx7("div", { style: { marginTop: 6 }, children: /* @__PURE__ */ jsx7("a", { href: "/reset-password", className: "nomad-textlink", style: { fontSize: "12px", color: "#666666", textDecoration: "none" }, children: "Forgot password?" }) })
         ] }),
         /* @__PURE__ */ jsx7(Button, { type: "submit", variant: "primary", radius, primary, disabled: busy !== null, children: busy === "email" ? "Signing in\u2026" : "Continue" })
       ] }),
@@ -1280,8 +1322,8 @@ function NomadSignIn({
 // src/react/sign-up.tsx
 import { useEffect as useEffect6, useState as useState10 } from "react";
 import { Fragment as Fragment4, jsx as jsx8, jsxs as jsxs7 } from "react/jsx-runtime";
-var stack5 = { display: "flex", flexDirection: "column", gap: "14px" };
-var fieldGap2 = { display: "flex", flexDirection: "column", gap: "12px" };
+var stack5 = { display: "flex", flexDirection: "column", gap: "12px" };
+var fieldGap2 = { display: "flex", flexDirection: "column", gap: "8px" };
 function NomadSignUp({
   projectId,
   baseUrl,
